@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Age Calculator</title>
+  <style>
+    i{
+        padding: 200px;
+        font-weight: bold;
+        font-size: 50px;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        color: rgba(232, 232, 97, 0.688);
+    }
+    /* Reset and box-sizing */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .container {
+      background: rgba(255 255 255 / 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      max-width: 400px;
+      width: 100%;
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    h1 {
+      font-weight: 900;
+      font-size: 2rem;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      user-select: none;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: #ddd;
+      text-align: left;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      box-shadow: inset 0 0 8px rgba(255 255 255 / 0.2);
+      background: rgba(255 255 255 / 0.15);
+      color: #fff;
+      transition: box-shadow 0.3s ease;
+      margin-bottom: 24px;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    input[type="date"]:focus {
+      box-shadow: 0 0 12px #a78bfa;
+      background: rgba(255 255 255 / 0.25);
+    }
+    
+    button {
+      background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 6px 15px rgba(71, 56, 186, 0.5);
+      width: 100%;
+    }
+    button:hover, button:focus {
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(141, 116, 246, 0.7);
+      outline: none;
+    }
+
+    .result {
+      margin-top: 28px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      min-height: 3em;
+      color: #e0e0ff;
+      line-height: 1.4;
+    }
+
+    .error {
+      color: #ff6b6b;
+      margin-top: -16px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-height: 1.2em;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 28px 16px;
+      }
+      h1 {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-label="Age Calculator">
+    <h1>Age Calculator</h1>
+    <form id="ageForm" novalidate>
+      <label for="birthdate">Enter your birthdate</label>
+      <input 
+        type="date" 
+        id="birthdate" 
+        name="birthdate" 
+        aria-describedby="birthdateHelp"
+        max=""
+        required 
+        aria-required="true"
+        />
+      <div class="error" id="errorMsg" role="alert" aria-live="assertive"></div>
+      <button type="submit" aria-label="Calculate Age">Calculate Age</button>
+    </form>
+    <div class="result" id="result" aria-live="polite"></div>
+  </main>
+
+  <script>
+    (function () {
+      const birthInput = document.getElementById('birthdate');
+      const form = document.getElementById('ageForm');
+      const result = document.getElementById('result');
+      const errorMsg = document.getElementById('errorMsg');
+
+      // Set max attribute to today to prevent future dates
+      const todayStr = new Date().toISOString().split('T')[0];
+      birthInput.setAttribute('max', todayStr);
+
+      // Helper: Calculate age from birthdate date object
+      function calculateAge(birthDate) {
+        const now = new Date();
+        let years = now.getFullYear() - birthDate.getFullYear();
+        let months = now.getMonth() - birthDate.getMonth();
+        let days = now.getDate() - birthDate.getDate();
+
+        if (days < 0) {
+          months -= 1;
+          days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        }
+
+        if (months < 0) {
+          years -= 1;
+          months += 12;
+        }
+
+        return { years, months, days };
+      }
+
+      // Format age as a readable string
+      function formatAge({ years, months, days }) {
+        const parts = [];
+        if (years > 0) parts.push(years + (years === 1 ? ' year' : ' years'));
+        if (months > 0) parts.push(months + (months === 1 ? ' month' : ' months'));
+        if (days > 0) parts.push(days + (days === 1 ? ' day' : ' days'));
+        if (parts.length === 0) return 'You were born today!';
+        return parts.join(', ');
+      }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        errorMsg.textContent = '';
+        result.textContent = '';
+
+        const birthDateValue = birthInput.value;
+        if (!birthDateValue) {
+          errorMsg.textContent = 'Please enter your birthdate.';
+          birthInput.focus();
+          return;
+        }
+
+        const birthDate = new Date(birthDateValue);
+        const now = new Date();
+
+        if (birthDate > now) {
+          errorMsg.textContent = 'Birthdate cannot be in the future.';
+          birthInput.focus();
+          return;
+        }
+
+        const age = calculateAge(birthDate);
+        result.textContent = 'Your age is: ' + formatAge(age);
+      });
+    })();
+  </script>
+  <i>Arbazkhan</i>
+</body>
+</html>
+
